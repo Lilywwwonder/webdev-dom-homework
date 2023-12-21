@@ -25,7 +25,7 @@
           rows="4"
         ></textarea>
         <div class="add-form-row">
-          <button id="addComment" value="" class="add-form-button" type="submit">Написать</button>
+          <button id="addComment" value="" class="add-form-button" type="button">Написать</button>
         </div>
       </div>
       </form>
@@ -70,10 +70,22 @@
   }
 
 
-
+// дз 2.11
+ const commentsElementListeners = () => {
+  const commentsElement = document.querySelectorAll('.comment-text');
   
-
-    
+  for (const commentText of commentsElement) {
+    commentText.addEventListener('click', (event) => {
+      event.preventDefault();
+      const index = commentText.dataset.index;
+      //alert(`привет`);
+      const comment = `${comments[index].name}:${comments[index].comment}`;
+      addTextElement.value = comment;
+      renderComments();
+  });
+  }
+  }
+  
     // очищаем форму после отправки заполненного комментария: строка 50-55
     const form = document.getElementById('myForm');
     form.addEventListener('submit', (e) => {
@@ -98,8 +110,11 @@
         isLike: false,  
       }
     ]
+
+
    
    // 2 рендер
+  //добавила индекс на строке comment-text - можно удалить, если не работает!!!!!!!!!!!!
    const renderComments = () => {
     const commentsHtml = comments.map((comment, index) => {
       const likeClass = comment.isLike ? '-active-like' : '';
@@ -109,7 +124,7 @@
             <div>${comment.time}</div>
           </div>
           <div class="comment-body">
-            <div class="comment-text">
+            <div class="comment-text" data-index="${index}">
               ${comment.comment}
             </div>
           </div>
@@ -128,6 +143,8 @@
   
     listElement.innerHTML = commentsHtml;
     likesButtonListeners();
+    // строка ниже проверить либо удалить!!!!!!!!!!!!!! - работает, оставляем
+    commentsElementListeners();
    };
    renderComments();
 
@@ -163,14 +180,24 @@
       ${hours}:${minutes}`;
 
       comments.push({
-        name: addNameElement.value,
-        time: newDate, // addTimeElement???
-        comment: addTextElement.value,
+        name: addNameElement.value
+          .replaceAll("<", "&lt")
+          .replaceAll(">", "&gt")
+          .replaceAll("&", "&amp;")
+          .replaceAll('"', "&quot;"),
+        time: newDate,
+        comment: addTextElement.value
+          .replaceAll("<", "&lt")
+          .replaceAll(">", "&gt")
+          .replaceAll("&", "&amp;")
+          .replaceAll('"', "&quot;"),
         like: 0, 
         isLike: false,
       });
 
       renderComments();
+      addNameElement.value = '';
+      addTextElement.value = '';
 
      // логику с innerHtml можно удалить ниже (спутана логика с post-запросом)
      // const oldListHTML = listElement.innerHTML;

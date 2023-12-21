@@ -136,4 +136,6 @@ body {
     opacity: 0.9;
   }
 
-
+.comment-text {
+  word-break: break-all;
+}
