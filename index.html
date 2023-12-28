@@ -46,6 +46,50 @@
     const addTimeElement = document.getElementById("addTime");
     const likesButtonElement = document.querySelectorAll('.like-button');
 
+// дз 2.12
+
+    const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
+      method: "GET",
+    });
+    fetchPromise.then((response) => {
+      const jsonPromise = response.json();
+      jsonPromise.then((responseData) => {
+        comments = responseData.comments.map((comment) =>
+        { return { 
+          name: comment.author.name, 
+          time: new Date(comment.date).toLocaleTimeString('sm', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'}), 
+          comment: comment.text, 
+          like: comment.likes, 
+          isLike: false, 
+        }; 
+      }); 
+      renderComments(); 
+    }); 
+  });
+
+
+    buttonElement.addEventListener("click", () => {
+      if (addNameElement.value === "") {
+        return;
+      }
+
+    fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
+        method: "POST",
+        body: JSON.stringify({
+          name: addNameElement.value,
+          text: addTextElement.value,
+        }),
+      }).then((response) => {
+        response.json().then((responseData) => {
+          //comments = responseData.todos; после удаления добавляет коммент и ставит лайк
+        });
+          renderComments();
+        });
+
+      //addNameElement.value = ""; 
+      //addTextElement.value = "";
+    });
+
 
 
   // дз
@@ -86,7 +130,7 @@
   }
   }
   
-    // очищаем форму после отправки заполненного комментария: строка 50-55
+// очищаем форму после отправки заполненного комментария: строка 50-55
     const form = document.getElementById('myForm');
     form.addEventListener('submit', (e) => {
       e.preventDefault(); // добавили, чтобы не перезагружалась страница
@@ -94,7 +138,7 @@
     });
 
 // 1 перенесли массив из html в js
-    const comments = [
+    let comments = [
       {
         name: "Глеб Фокин",
         time: "12.02.22 12:18",
