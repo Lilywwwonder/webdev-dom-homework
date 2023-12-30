@@ -46,8 +46,14 @@
     const addTimeElement = document.getElementById("addTime");
     const likesButtonElement = document.querySelectorAll('.like-button');
 
+// 1 перенесли массив из html в js
+// убрали содержимое массива, т.к. перезапишется новыми данными (содержимое ниже)
+let comments = []
+
+
 // дз 2.12
 
+function fetchAndRender() {
     const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
       method: "GET",
     });
@@ -66,7 +72,9 @@
       renderComments(); 
     }); 
   });
+}
 
+fetchAndRender();
 
     buttonElement.addEventListener("click", () => {
       if (addNameElement.value === "") {
@@ -83,7 +91,7 @@
         response.json().then((responseData) => {
           //comments = responseData.todos; после удаления добавляет коммент и ставит лайк
         });
-          renderComments();
+          fetchAndRender();
         });
 
       //addNameElement.value = ""; 
@@ -137,23 +145,7 @@
       e.target.reset();
     });
 
-// 1 перенесли массив из html в js
-    let comments = [
-      {
-        name: "Глеб Фокин",
-        time: "12.02.22 12:18",
-        comment: "Это будет первый комментарий на этой странице",
-        like: 3,
-        isLike: false,
-      },
-      {
-        name: "Варвара Н.",
-        time: "13.02.22 19:22",
-        comment: "Мне нравится как оформлена эта страница! ❤",
-        like: 75,
-        isLike: false,  
-      }
-    ]
+
 
 
    
@@ -200,13 +192,13 @@
       //addNameElement.style.backgroundColor = ""; альтернатива инлайн - не рек
       addNameElement.classList.remove("error");
       addTextElement.classList.remove("error");
-      if (addNameElement.value === "") {
+      if (addNameElement.value.trim() === "") {
         //addNameElement.style.backgroundColor = "red"; альтернатива инлайн - не рек
         addNameElement.classList.add("error");
         return;
       } 
       
-      if (addTextElement.value === "") {
+      if (addTextElement.value.trim() === "") {
         addTextElement.classList.add("error");
         return;
       };
@@ -228,13 +220,15 @@
           .replaceAll("<", "&lt")
           .replaceAll(">", "&gt")
           .replaceAll("&", "&amp;")
-          .replaceAll('"', "&quot;"),
+          .replaceAll('"', "&quot;")
+          .replaceAll(" ", "&nbsp;"),
         time: newDate,
         comment: addTextElement.value
           .replaceAll("<", "&lt")
           .replaceAll(">", "&gt")
           .replaceAll("&", "&amp;")
-          .replaceAll('"', "&quot;"),
+          .replaceAll('"', "&quot;")
+          .replaceAll(" ", "&nbsp;"),
         like: 0, 
         isLike: false,
       });
@@ -242,7 +236,32 @@
       renderComments();
       addNameElement.value = '';
       addTextElement.value = '';
+    });
+ 
 
+    console.log("It works!");
+
+// комментарии по коду
+// 1 перенесли массив из html в js
+//let comments = [
+  //    {
+  //      name: "Глеб Фокин",
+  //      time: "12.02.22 12:18",
+  //      comment: "Это будет первый комментарий на этой странице",
+  //      like: 3,
+  //      isLike: false,
+  //    },
+  //    {
+  //      name: "Варвара Н.",
+  //      time: "13.02.22 19:22",
+  //      comment: "Мне нравится как оформлена эта страница! ❤",
+  //      like: 75,
+  //      isLike: false,  
+  //    }
+  //  ]
+
+
+  // !!!!!!!!!!!!!!!!
      // логику с innerHtml можно удалить ниже (спутана логика с post-запросом)
      // const oldListHTML = listElement.innerHTML;
      // listElement.innerHTML = oldListHTML + 
@@ -262,10 +281,9 @@
      //         <button class="like-button"></button >
      //       </div>
      //     </div>
-     //   </li>`
-    });
- 
-
-    console.log("It works!");
+     //   </li>
+    
   </script>
 </html>
+
+
