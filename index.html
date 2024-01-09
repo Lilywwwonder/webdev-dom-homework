@@ -84,8 +84,18 @@ fetchAndRender();
     fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
         method: "POST",
         body: JSON.stringify({
-          name: addNameElement.value,
-          text: addTextElement.value,
+          name: addNameElement.value
+          .replaceAll("<", "&lt")
+          .replaceAll(">", "&gt")
+          .replaceAll("&", "&amp;")
+          .replaceAll('"', "&quot;")
+          .replaceAll(" ", "&nbsp;"),
+          text: addTextElement.value
+          .replaceAll("<", "&lt")
+          .replaceAll(">", "&gt")
+          .replaceAll("&", "&amp;")
+          .replaceAll('"', "&quot;")
+          .replaceAll(" ", "&nbsp;"),
         }),
       }).then((response) => {
         response.json().then((responseData) => {
@@ -97,9 +107,7 @@ fetchAndRender();
       //addNameElement.value = ""; 
       //addTextElement.value = "";
     });
-
-
-
+  
   // дз
    const likesButtonListeners = () => {
     const likesButtonElement = document.querySelectorAll('.like-button');
@@ -215,23 +223,6 @@ fetchAndRender();
       let newDate = `${date}.${month + 1}.${year} 
       ${hours}:${minutes}`;
 
-      comments.push({
-        name: addNameElement.value
-          .replaceAll("<", "&lt")
-          .replaceAll(">", "&gt")
-          .replaceAll("&", "&amp;")
-          .replaceAll('"', "&quot;")
-          .replaceAll(" ", "&nbsp;"),
-        time: newDate,
-        comment: addTextElement.value
-          .replaceAll("<", "&lt")
-          .replaceAll(">", "&gt")
-          .replaceAll("&", "&amp;")
-          .replaceAll('"', "&quot;")
-          .replaceAll(" ", "&nbsp;"),
-        like: 0, 
-        isLike: false,
-      });
 
       renderComments();
       addNameElement.value = '';
@@ -283,6 +274,28 @@ fetchAndRender();
      //     </div>
      //   </li>
     
+
+// перенесли в метод post
+  //    comments.push({
+  //      name: addNameElement.value
+  //        .replaceAll("<", "&lt")
+  //        .replaceAll(">", "&gt")
+  //        .replaceAll("&", "&amp;")
+  //        .replaceAll('"', "&quot;")
+  //        .replaceAll(" ", "&nbsp;"),
+  //      time: newDate,
+  //      comment: addTextElement.value
+  //        .replaceAll("<", "&lt")
+  //        .replaceAll(">", "&gt")
+  //        .replaceAll("&", "&amp;")
+  //        .replaceAll('"', "&quot;")
+  //        .replaceAll(" ", "&nbsp;"),
+  //      like: 0, 
+  //      isLike: false,
+  //    });
+
+
+
   </script>
 </html>
 
