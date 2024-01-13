@@ -8,6 +8,7 @@
 
   <body>
     <div class="container">
+      <span class="preload">Загрузка страницы комментариев</span>
       <ul id="list" class="comments">
 <!--список рендерится из js-->
       </ul>
@@ -45,6 +46,9 @@
     const addTextElement = document.getElementById("addText");
     const addTimeElement = document.getElementById("addTime");
     const likesButtonElement = document.querySelectorAll('.like-button');
+    const preloader = document.querySelector('.preload');
+    
+   // let loadedPage = false;
 
 // 1 перенесли массив из html в js
 // убрали содержимое массива, т.к. перезапишется новыми данными (содержимое ниже)
@@ -57,29 +61,54 @@ function fetchAndRender() {
     const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
       method: "GET",
     });
-    fetchPromise.then((response) => {
-      const jsonPromise = response.json();
-      jsonPromise.then((responseData) => {
-        comments = responseData.comments.map((comment) =>
-        { return { 
-          name: comment.author.name, 
-          time: new Date(comment.date).toLocaleTimeString('sm', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'}), 
-          comment: comment.text, 
-          like: comment.likes, 
-          isLike: false, 
-        }; 
-      }); 
-      renderComments(); 
+// дз 2.13 стало
+    fetchPromise
+    .then((response) => {
+    return response.json();
+    })
+    .then((responseData) => {
+      comments = responseData.comments.map((comment) => {
+        return { 
+        name: comment.author.name, 
+        time: new Date(comment.date).toLocaleTimeString('sm', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'}), 
+        comment: comment.text, 
+        like: comment.likes, 
+        isLike: false, 
+      }; 
     }); 
+    renderComments();
+    preloader.classList.add('hide'); 
   });
 }
-
 fetchAndRender();
+
+    //было 
+//     fetchPromise.then((response) => {
+//       const jsonPromise = response.json();
+//       jsonPromise.then((responseData) => {
+//         comments = responseData.comments.map((comment) =>
+//         { return { 
+//           name: comment.author.name, 
+//           time: new Date(comment.date).toLocaleTimeString('sm', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'}), 
+//           comment: comment.text, 
+//           like: comment.likes, 
+//           isLike: false, 
+//         }; 
+//       }); 
+//       renderComments(); 
+//     }); 
+//   });
+// }
 
     buttonElement.addEventListener("click", () => {
       if (addNameElement.value === "") {
         return;
       }
+
+// загрузка. textContent = innerHTML (аналог)
+// отключаем кнопку
+buttonElement.disabled = true;
+buttonElement.textContent = 'Комментарий добавляется...';
 
     fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
         method: "POST",
@@ -97,17 +126,28 @@ fetchAndRender();
           .replaceAll('"', "&quot;")
           .replaceAll(" ", "&nbsp;"),
         }),
-      }).then((response) => {
-        response.json().then((responseData) => {
-          //comments = responseData.todos; после удаления добавляет коммент и ставит лайк
-        });
-          fetchAndRender();
-        });
-
-      //addNameElement.value = ""; 
-      //addTextElement.value = "";
+// дз 2.13 стало
+      })
+      .then((response) => {
+        return response.json();
+      })
+      .then((responseData) => {
+        fetchAndRender();
+      })
+      // включаем кнопку, добавили .then(data)
+      .then((data) => {
+        buttonElement.disabled = false;
+        buttonElement.textContent = 'Написать';
+      })
     });
-  
+        //было 
+      // }).then((response) => {
+      //   response.json().then((responseData) => {
+      //     //comments = responseData.todos; после удаления добавляет коммент и ставит лайк
+      //   });
+      //     fetchAndRender();
+      //   });
+
   // дз
    const likesButtonListeners = () => {
     const likesButtonElement = document.querySelectorAll('.like-button');

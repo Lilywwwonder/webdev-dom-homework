@@ -139,3 +139,7 @@ body {
 .comment-text {
   word-break: break-all;
 }
+
+.hide {
+	display: none; 
+}
