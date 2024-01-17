@@ -47,41 +47,52 @@
     const addTimeElement = document.getElementById("addTime");
     const likesButtonElement = document.querySelectorAll('.like-button');
     const preloader = document.querySelector('.preload');
-    
-   // let loadedPage = false;
+
 
 // 1 перенесли массив из html в js
 // убрали содержимое массива, т.к. перезапишется новыми данными (содержимое ниже)
 let comments = []
 
 
-// дз 2.12
-
+// дз 2.12 и 2.14
 function fetchAndRender() {
-    const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
-      method: "GET",
-    });
-// дз 2.13 стало
-    fetchPromise
+  const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
+    method: "GET",
+  });
+
+  fetchPromise
     .then((response) => {
-    return response.json();
+      if (response.status === 500) {
+        throw new Error("Сервер сломался");
+      }
+      return response.json();
     })
     .then((responseData) => {
       comments = responseData.comments.map((comment) => {
         return { 
-        name: comment.author.name, 
-        time: new Date(comment.date).toLocaleTimeString('sm', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'}), 
-        comment: comment.text, 
-        like: comment.likes, 
-        isLike: false, 
-      }; 
-    }); 
-    renderComments();
-    preloader.classList.add('hide'); 
-  });
+          name: comment.author.name, 
+          time: new Date(comment.date).toLocaleTimeString('sm', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'}), 
+          comment: comment.text, 
+          like: comment.likes, 
+          isLike: false, 
+        }; 
+      });
+    }) 
+    .then(() => { 
+      renderComments();
+      preloader.classList.add('hide'); 
+      // render обернули в then проверить!!!!!!!!
+      // renderComments();
+      // preloader.classList.add('hide');
+    })
+    .catch((error) => {
+      if (error.message === "Сервер сломался") {
+        alert("Сервер сломался, попробуй позже");
+        return;
+      }
+    });
 }
 fetchAndRender();
-
     //было 
 //     fetchPromise.then((response) => {
 //       const jsonPromise = response.json();
@@ -100,10 +111,20 @@ fetchAndRender();
 //   });
 // }
 
-    buttonElement.addEventListener("click", () => {
-      if (addNameElement.value === "") {
-        return;
-      }
+buttonElement.addEventListener("click", () => {
+  addTextElement.classList.remove("error");
+  if (addNameElement.value.trim() === "") {
+    addNameElement.classList.add("error");
+    return;
+  }
+  if (addTextElement.value.trim() === "") {
+    addTextElement.classList.add("error");
+    return;
+  }
+
+// сохранить значения полей ввода
+      const nameValue = addNameElement.value;
+      const textValue = addTextElement.value;
 
 // загрузка. textContent = innerHTML (аналог)
 // отключаем кнопку
@@ -113,23 +134,34 @@ buttonElement.textContent = 'Комментарий добавляется...';
     fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
         method: "POST",
         body: JSON.stringify({
-          name: addNameElement.value
+          name: nameValue //name: addNameElement.value
           .replaceAll("<", "&lt")
           .replaceAll(">", "&gt")
           .replaceAll("&", "&amp;")
           .replaceAll('"', "&quot;")
           .replaceAll(" ", "&nbsp;"),
-          text: addTextElement.value
+          text: textValue  // text: addTextElement.value
           .replaceAll("<", "&lt")
           .replaceAll(">", "&gt")
           .replaceAll("&", "&amp;")
           .replaceAll('"', "&quot;")
           .replaceAll(" ", "&nbsp;"),
+          // для вызова 500 ошибки код ниже
+          //forceError: true
         }),
 // дз 2.13 стало
       })
       .then((response) => {
+      if (response.status === 500) {
+        throw new Error("Сервер сломался");
+      }
+      if (nameValue.length < 3 || textValue.length < 3) {
+        alert("Имя и комментарий должны быть не короче 3 символов");
+         addNameElement.value = nameValue;
+         addTextElement.value = textValue;
+      } else {
         return response.json();
+      }
       })
       .then((responseData) => {
         fetchAndRender();
@@ -138,7 +170,23 @@ buttonElement.textContent = 'Комментарий добавляется...';
       .then((data) => {
         buttonElement.disabled = false;
         buttonElement.textContent = 'Написать';
+      //  throw new Error("Some Error");
       })
+      .catch((error) => {
+        if (error.message === "Сервер сломался") {
+        alert("Сервер сломался, попробуй позже");
+        return;
+      }
+       if (error instanceof TypeError) {
+       alert("Кажется, у вас сломался интернет, попробуйте позже");
+       return;
+      }
+      console.log(error);
+      })
+      .finally(() => {
+      buttonElement.disabled = false;
+      buttonElement.textContent = 'Написать';
+    });
     });
         //было 
       // }).then((response) => {
@@ -158,11 +206,9 @@ buttonElement.textContent = 'Комментарий добавляется...';
           if (comments[index].isLike === false) { 
             comments[index].isLike = true; 
             comments[index].like++; 
-           //likeButton.classList.add('-active-like');
         } else { 
             comments[index].isLike = false; 
             comments[index].like--; 
-          //likeButton.classList.remove('-active-like');
       }
       renderComments();
      });
@@ -186,19 +232,15 @@ buttonElement.textContent = 'Комментарий добавляется...';
   }
   }
   
-// очищаем форму после отправки заполненного комментария: строка 50-55
+// очищаем форму после отправки заполненного комментария
     const form = document.getElementById('myForm');
     form.addEventListener('submit', (e) => {
       e.preventDefault(); // добавили, чтобы не перезагружалась страница
       e.target.reset();
     });
 
-
-
-
-   
-   // 2 рендер
-  //добавила индекс на строке comment-text - можно удалить, если не работает!!!!!!!!!!!!
+  
+  //добавила индекс на строке comment-text
    const renderComments = () => {
     const commentsHtml = comments.map((comment, index) => {
       const likeClass = comment.isLike ? '-active-like' : '';
@@ -208,7 +250,7 @@ buttonElement.textContent = 'Комментарий добавляется...';
             <div>${comment.time}</div>
           </div>
           <div class="comment-body">
-            <div class="comment-text" data-index="${index}">
+            <div class="comment-text" data-index="${index}"> 
               ${comment.comment}
             </div>
           </div>
@@ -227,7 +269,6 @@ buttonElement.textContent = 'Комментарий добавляется...';
   
     listElement.innerHTML = commentsHtml;
     likesButtonListeners();
-    // строка ниже проверить либо удалить!!!!!!!!!!!!!! - работает, оставляем
     commentsElementListeners();
    };
    renderComments();
@@ -251,17 +292,16 @@ buttonElement.textContent = 'Комментарий добавляется...';
         return;
       };
 
-      // устанавливаем дату в комментарии: строка 141-150
-      let addTimeElement = new Date();
-      let year = addTimeElement.getFullYear().toString().slice(-2);
-      let minutes = addTimeElement.getMinutes() < 10 ? '0' + addTimeElement.getMinutes() : addTimeElement.getMinutes();
-      let hours = addTimeElement.getHours() < 10 ? '0' + addTimeElement.getHours() : addTimeElement.getHours();
-      let date = addTimeElement.getDate() < 10 ? '0' + addTimeElement.getDate() : addTimeElement.getDate();
-      let month = addTimeElement.getMonth() < 10 ? '0' + addTimeElement.getMonth() : addTimeElement.getMonth();
-      //addTimeElement.getMonth() вместо month поставить, если не сработает с 0 месяца в строке ниже, а верхнюю строку надо будет удалить
+    // нет необходщимости в коде ниже
+      // let addTimeElement = new Date();
+      // let year = addTimeElement.getFullYear().toString().slice(-2);
+      // let minutes = addTimeElement.getMinutes() < 10 ? '0' + addTimeElement.getMinutes() : addTimeElement.getMinutes();
+      // let hours = addTimeElement.getHours() < 10 ? '0' + addTimeElement.getHours() : addTimeElement.getHours();
+      // let date = addTimeElement.getDate() < 10 ? '0' + addTimeElement.getDate() : addTimeElement.getDate();
+      // let month = addTimeElement.getMonth() < 10 ? '0' + addTimeElement.getMonth() : addTimeElement.getMonth();
 
-      let newDate = `${date}.${month + 1}.${year} 
-      ${hours}:${minutes}`;
+      // let newDate = `${date}.${month + 1}.${year} 
+      // ${hours}:${minutes}`;
 
 
       renderComments();
@@ -334,9 +374,47 @@ buttonElement.textContent = 'Комментарий добавляется...';
   //      isLike: false,
   //    });
 
+  // function fetchAndRender() {
+//     const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
+//       method: "GET",
+//     });
+// // дз 2.13 стало
+//     fetchPromise
+//     .then((response) => {
+//       if (response.status === 500) {
+//       throw new Error("Сервер сломался");
+//     }
+//      // if (response.status === 400) {
+//       //  throw new Error("Плохой запрос");
+//       //}
+//     return response.json();
+//     })
+//     .then((responseData) => {
+//       comments = responseData.comments.map((comment) => {
+//         return { 
+//         name: comment.author.name, 
+//         time: new Date(comment.date).toLocaleTimeString('sm', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'}), 
+//         comment: comment.text, 
+//         like: comment.likes, 
+//         isLike: false, 
+//       }; 
+//     })
+//     .catch((error) => {
+//       if (error.message === "Сервер сломался") {
+//       alert("Сервер сломался, попробуй позже");
+//       return;
+//       }
 
+//      // if (error.message === "Плохой запрос") {
+//      // alert("Кажется, у вас сломался интернет, попробуйте позже");
+//      // return;
+//      // }
+//     });
+//     renderComments();
+//     preloader.classList.add('hide'); 
+//   });
+// }
+// fetchAndRender();
 
   </script>
 </html>
-
-
