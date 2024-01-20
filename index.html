@@ -53,7 +53,6 @@
 // убрали содержимое массива, т.к. перезапишется новыми данными (содержимое ниже)
 let comments = []
 
-
 // дз 2.12 и 2.14
 function fetchAndRender() {
   const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
@@ -70,9 +69,19 @@ function fetchAndRender() {
     .then((responseData) => {
       comments = responseData.comments.map((comment) => {
         return { 
-          name: comment.author.name, 
+          name: comment.author.name //возвращаем спецсимволы обратно
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&amp;/g, "&")
+          .replace(/&quot;/g, '"')
+          .replace(/&nbsp;/g, " "),
           time: new Date(comment.date).toLocaleTimeString('sm', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'}), 
-          comment: comment.text, 
+          comment: comment.text //возвращаем спецсимволы обратно
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&amp;/g, "&")
+          .replace(/&quot;/g, '"')
+          .replace(/&nbsp;/g, " "),
           like: comment.likes, 
           isLike: false, 
         }; 
@@ -93,23 +102,7 @@ function fetchAndRender() {
     });
 }
 fetchAndRender();
-    //было 
-//     fetchPromise.then((response) => {
-//       const jsonPromise = response.json();
-//       jsonPromise.then((responseData) => {
-//         comments = responseData.comments.map((comment) =>
-//         { return { 
-//           name: comment.author.name, 
-//           time: new Date(comment.date).toLocaleTimeString('sm', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'}), 
-//           comment: comment.text, 
-//           like: comment.likes, 
-//           isLike: false, 
-//         }; 
-//       }); 
-//       renderComments(); 
-//     }); 
-//   });
-// }
+
 
 buttonElement.addEventListener("click", () => {
   addTextElement.classList.remove("error");
@@ -149,17 +142,22 @@ buttonElement.textContent = 'Комментарий добавляется...';
           // для вызова 500 ошибки код ниже
           //forceError: true
         }),
+
 // дз 2.13 стало
       })
       .then((response) => {
+      if (response.status === 400 && (nameValue.length < 3 || textValue.length < 3)) { // обрабатываем ошибку 400
+      throw new Error("Некорректный запрос");
+       }
       if (response.status === 500) {
         throw new Error("Сервер сломался");
       }
-      if (nameValue.length < 3 || textValue.length < 3) {
-        alert("Имя и комментарий должны быть не короче 3 символов");
-         addNameElement.value = nameValue;
-         addTextElement.value = textValue;
-      } else {
+      // if (nameValue.length < 3 || textValue.length < 3) {
+      //   alert("Имя и комментарий должны быть не короче 3 символов");
+      //    addNameElement.value = nameValue;
+      //    addTextElement.value = textValue;
+      // } 
+      else {
         return response.json();
       }
       })
@@ -175,7 +173,13 @@ buttonElement.textContent = 'Комментарий добавляется...';
       .catch((error) => {
         if (error.message === "Сервер сломался") {
         alert("Сервер сломался, попробуй позже");
+        addNameElement.value = nameValue;
+        addTextElement.value = textValue;
         return;
+      } if (error.message === "Некорректный запрос") {
+        alert("Имя и комментарий должны быть не короче 3 символов");
+         addNameElement.value = nameValue;
+         addTextElement.value = textValue;
       }
        if (error instanceof TypeError) {
        alert("Кажется, у вас сломался интернет, попробуйте позже");
@@ -188,13 +192,19 @@ buttonElement.textContent = 'Комментарий добавляется...';
       buttonElement.textContent = 'Написать';
     });
     });
-        //было 
-      // }).then((response) => {
-      //   response.json().then((responseData) => {
-      //     //comments = responseData.todos; после удаления добавляет коммент и ставит лайк
-      //   });
-      //     fetchAndRender();
-      //   });
+
+   //   .catch((error) => {
+    // if (error.message === "Сервер сломался") {
+    //     alert("Сервер сломался, попробуй позже");
+    //     addNameElement.value = nameValue;
+    //     addTextElement.value = textValue;
+    // } else if (error.message === "Некорректный запрос") { // обрабатываем ошибку 400
+    //     alert("Некорректный запрос, проверьте введенные данные");
+    //     // другие действия в случае ошибки 400
+    // } else if (error instanceof TypeError) {
+    //     alert("Кажется, у вас сломался интернет, попробуйте позже");
+    // }
+    // console.log(error);
 
   // дз
    const likesButtonListeners = () => {
@@ -271,11 +281,7 @@ buttonElement.textContent = 'Комментарий добавляется...';
     likesButtonListeners();
     commentsElementListeners();
    };
-   renderComments();
-
-
-
-    
+   renderComments(); 
 
     buttonElement.addEventListener('click', () => {
       //addNameElement.style.backgroundColor = ""; альтернатива инлайн - не рек
@@ -292,18 +298,6 @@ buttonElement.textContent = 'Комментарий добавляется...';
         return;
       };
 
-    // нет необходщимости в коде ниже
-      // let addTimeElement = new Date();
-      // let year = addTimeElement.getFullYear().toString().slice(-2);
-      // let minutes = addTimeElement.getMinutes() < 10 ? '0' + addTimeElement.getMinutes() : addTimeElement.getMinutes();
-      // let hours = addTimeElement.getHours() < 10 ? '0' + addTimeElement.getHours() : addTimeElement.getHours();
-      // let date = addTimeElement.getDate() < 10 ? '0' + addTimeElement.getDate() : addTimeElement.getDate();
-      // let month = addTimeElement.getMonth() < 10 ? '0' + addTimeElement.getMonth() : addTimeElement.getMonth();
-
-      // let newDate = `${date}.${month + 1}.${year} 
-      // ${hours}:${minutes}`;
-
-
       renderComments();
       addNameElement.value = '';
       addTextElement.value = '';
@@ -312,109 +306,6 @@ buttonElement.textContent = 'Комментарий добавляется...';
 
     console.log("It works!");
 
-// комментарии по коду
-// 1 перенесли массив из html в js
-//let comments = [
-  //    {
-  //      name: "Глеб Фокин",
-  //      time: "12.02.22 12:18",
-  //      comment: "Это будет первый комментарий на этой странице",
-  //      like: 3,
-  //      isLike: false,
-  //    },
-  //    {
-  //      name: "Варвара Н.",
-  //      time: "13.02.22 19:22",
-  //      comment: "Мне нравится как оформлена эта страница! ❤",
-  //      like: 75,
-  //      isLike: false,  
-  //    }
-  //  ]
-
-
-  // !!!!!!!!!!!!!!!!
-     // логику с innerHtml можно удалить ниже (спутана логика с post-запросом)
-     // const oldListHTML = listElement.innerHTML;
-     // listElement.innerHTML = oldListHTML + 
-     // `<li class="comment">
-     //     <div class="comment-header">
-     //       <div>${addNameElement.value}</div>
-     //       <div>${newDate}</div>
-     //     </div>
-     //     <div class="comment-body">
-     //       <div class="comment-text">
-     //         ${addTextElement.value}
-     //       </div>
-     //     </div>
-     //     <div class="comment-footer">
-     //       <div class="likes">
-     //         <span class="likes-counter">0</span>
-     //         <button class="like-button"></button >
-     //       </div>
-     //     </div>
-     //   </li>
-    
-
-// перенесли в метод post
-  //    comments.push({
-  //      name: addNameElement.value
-  //        .replaceAll("<", "&lt")
-  //        .replaceAll(">", "&gt")
-  //        .replaceAll("&", "&amp;")
-  //        .replaceAll('"', "&quot;")
-  //        .replaceAll(" ", "&nbsp;"),
-  //      time: newDate,
-  //      comment: addTextElement.value
-  //        .replaceAll("<", "&lt")
-  //        .replaceAll(">", "&gt")
-  //        .replaceAll("&", "&amp;")
-  //        .replaceAll('"', "&quot;")
-  //        .replaceAll(" ", "&nbsp;"),
-  //      like: 0, 
-  //      isLike: false,
-  //    });
-
-  // function fetchAndRender() {
-//     const fetchPromise = fetch("https://wedev-api.sky.pro/api/v1/atolykova-lily/comments", {
-//       method: "GET",
-//     });
-// // дз 2.13 стало
-//     fetchPromise
-//     .then((response) => {
-//       if (response.status === 500) {
-//       throw new Error("Сервер сломался");
-//     }
-//      // if (response.status === 400) {
-//       //  throw new Error("Плохой запрос");
-//       //}
-//     return response.json();
-//     })
-//     .then((responseData) => {
-//       comments = responseData.comments.map((comment) => {
-//         return { 
-//         name: comment.author.name, 
-//         time: new Date(comment.date).toLocaleTimeString('sm', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'}), 
-//         comment: comment.text, 
-//         like: comment.likes, 
-//         isLike: false, 
-//       }; 
-//     })
-//     .catch((error) => {
-//       if (error.message === "Сервер сломался") {
-//       alert("Сервер сломался, попробуй позже");
-//       return;
-//       }
-
-//      // if (error.message === "Плохой запрос") {
-//      // alert("Кажется, у вас сломался интернет, попробуйте позже");
-//      // return;
-//      // }
-//     });
-//     renderComments();
-//     preloader.classList.add('hide'); 
-//   });
-// }
-// fetchAndRender();
 
   </script>
 </html>
